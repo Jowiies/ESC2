@@ -1,0 +1,11 @@
+# Ignore everything
+*
+
+# Allow directories
+!*/
+
+# Allow Makefiles
+!Makefile
+
+# Allow .s files
+!*.s
