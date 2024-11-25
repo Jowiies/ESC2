@@ -1,10 +1,12 @@
-.include "../../crt0.s"
 .include "../../macros.s"
+.include "../../crt0.s"
 
 .data
 
-end_c:	.byte 0
+move:	.byte 0
 key:	.byte 0
+ticks:  .word 0
+
 		.balign 2
 
 .text
@@ -17,24 +19,96 @@ main:
 
 	$movei R1, keyboard_ISR
 	st 1*2(R0), R1
+
+    ;setting row and column values
+    movi R4, 4
+    movi R5, 8
 	
 	;setting interruption connection
 	movi R0, 1
 	out Rcon_rel, R0
 	out Rcon_tec, R0
 	ei
+    
+    ;showing initial x
+    $movei R1, 'X 
+    out Rdat_pant, R1
+    out Rfil_pant, R4
+    out Rcol_pant, R5
+    $movei R1, 0x8000
+    out Rcon_pant, R1
 
 for:
 	$movei R0, key
 	ldb R0, 0(R0)
 	bz R0, for
 
-loop:	
-	$movei R0, end_c
-	ldb R1, 0(R0)
-	bz R1, loop
-	
+	$movei R1, move
+	ldb R1, 0(R1)
+    bz R1, show
 
+    ;Clean char from screen
+    $movei R1, ' 
+    out Rdat_pant, R1
+    out Rfil_pant, R4
+    out Rcol_pant, R5
+    $movei R1, 0x8000
+    out Rcon_pant, R1
+
+    ;if(key == 'L') --row
+    $movei R1, 'L
+    cmpeq R1, R0, R1
+    sub R4, R4, R1
+    
+    ;if(key == 'P') ++row
+    $movei R1, 'P
+    cmpeq R1, R0, R1
+    add R4, R4, R1
+
+    ;if(key == 'S') ++cloumn
+    $movei R1, 'S
+    cmpeq R1, R0, R1
+    add R5, R5, R1
+
+    ;if(key == 'A') --column
+    $movei R1, 'A
+    cmpeq R1, R0, R1
+    sub R5, R5, R1
+
+	; ticks = 0
+	movi R1, 0
+	$movei R0, ticks
+	st 0(R0), R1
+
+show:
+    $movei R1, 'X 
+    out Rdat_pant, R1
+    out Rfil_pant, R4
+    out Rcol_pant, R5
+    $movei R1, 0x8000
+    out Rcon_pant, R1
+
+    xor R0, R0, R0
+    xor R1, R1, R1
+
+    cmplt R2, R4, R0
+    or R1, R1, R2
+
+    cmplt R2, R5, R0
+    or R1, R1, R2
+
+    addi R0, R0, 16
+    cmplt R2, R0, R4
+    or R1, R1, R2
+
+    add R0, R0, R0
+    add R0, R0, R0
+
+    cmplt R2, R0, R5
+    or R1, R1, R2
+
+    bz R1, for
+    
 	halt
 
 
@@ -52,18 +126,23 @@ keyboard_ISR:
 	cmpeq R2, R0, R1
 	$movei R1, 'S
 	cmpeq R1, R0, R1
-	and R2, R2, R1
+	or R2, R2, R1
 	$movei R1, 'L
 	cmpeq R1, R0, R1
-	and R2, R2, R1
+	or R2, R2, R1
 	$movei R1, 'P
 	cmpeq R1, R0, R1
-	and R2, R2, R1	
+	or R2, R2, R1	
 	bz R2, end_KEYBOARD	
 
 	;key = keyboar input
 	$movei R1, key
 	stb 0(R1), R0
+
+	; ticks = 0
+	movi R1, 0
+	$movei R0, ticks
+	st 0(R0), R1
 end_KEYBOARD:
 	jmp R6
 
@@ -74,19 +153,20 @@ clock_ISR:
 	addi R1, R1, 1
 	st 0(R0), R1
 	
-	; if (ticks < 4) return
-	movi R2, 4
+    ; move = false
+	xor R2, R2, R2
+	$movei R0, move
+	stb 0(R0), R2
+	
+	; if (ticks >= 4) return
+	movi R2, 1*10
 	$cmpge R2, R1, R2
 	bz R2, end_CLK
 
-	; ticks = 0
-	movi R1, 0
-	$movei R0, ticks
-	st 0(R0), R1
 
-	; clock_ready = true
+	; move = true
 	addi R1, R1, 1
-	$movei R0, end_c
+	$movei R0, move
 	stb 0(R0), R1
 end_CLK:
 	jmp R6
