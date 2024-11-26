@@ -10,9 +10,12 @@ key:	.byte 0
 .text
 
 main:
+	;setting interrupt vector with our ISR
 	$movei R0, interrupts_vector
 	$movei R1, keyboard_ISR
 	st 1*2(R0), R1		;vector[keyboard ID] = keyboard_ISR
+
+	;connecting with interrupt to the keyboard
 	movi R0, 1
 	out Rcon_tec, R0
 	ei
@@ -51,6 +54,7 @@ end_MAIN:
 	halt
 
 keyboard_ISR:
+	;reading the input from the keyboard
 	$movei R0, tteclat
 	in R1, Rdat_tec
 	add R0, R1, R0		
@@ -58,10 +62,9 @@ keyboard_ISR:
 	$movei R1, key
 	stb 0(R1), R0		;key = tteclat[Rdat_tec]
 	
+	;keypressed = true
 	$movei R0, end
-	bnz R0, end_KEY		;if (keypressed) return
 	movi R1, 1			
-	stb 0(R0), R1		;keypressed = true
+	stb 0(R0), R1
 
-end_KEY:
 	jmp R6

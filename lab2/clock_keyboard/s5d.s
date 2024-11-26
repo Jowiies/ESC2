@@ -3,12 +3,11 @@
 
 .data
 
-move:	.byte 0
-key:	.byte 0
-ticks:  .word 0
-
-.balign 2
-
+ticks:			.word 0
+move:			.byte 0
+key:			.byte 0
+key_pressed:	.byte 0
+				.balign 2
 .text
 
 main:
@@ -29,38 +28,33 @@ main:
     out Rcon_tec, R0
     ei
 
-    ;showing initial x
-    $movei R1, 'X 
-    out Rdat_pant, R1
-    out Rfil_pant, R4
-    out Rcol_pant, R5
-    $movei R1, 0x8000
-    out Rcon_pant, R1
-
 for:
-    $movei R0, key
-    ldb R0, 0(R0)
-    bz R0, for
-
-    $movei R1, move
-    ldb R2, 0(R1)
-    bz R2, show
+    $movei R0, key_pressed
+    ldb R1, 0(R0)
+    bz R1, show
+    
+	$movei R0, move
+    ldb R1, 0(R0)
+    bz R1, show
 
     ;move = false
-    xor R2, R2, R2
-    stb 0(R1), R2
+    xor R1, R1, R1
+    stb 0(R0), R1
 
     ; ticks = 0
-    $movei R1, ticks
-    st 0(R1), R2
+    $movei R0, ticks
+    st 0(R0), R1
 
     ;Clean char from screen
-    $movei R1, ' 
-    out Rdat_pant, R1
+    $movei R0, ' 
+    out Rdat_pant, R0
     out Rfil_pant, R4
     out Rcol_pant, R5
-    $movei R1, 0x8000
-    out Rcon_pant, R1
+    $movei R0, 0x8000
+    out Rcon_pant, R0
+
+    $movei R0, key
+    ldb R0, 0(R0)
 
     ;if(key == 'P') --row
     $movei R1, 'P
@@ -118,25 +112,16 @@ end_MAIN:
     halt
 
 keyboard_ISR:
+	;a key has been pressed
+	$movei R0, key_pressed
+	movi R1, 1
+	stb 0(R0), R1
+
     ;getting keyboard input
     in R0, Rdat_tec
     $movei R1, tteclat
     add R0, R1, R0
     ldb R0, 0(R0)
-
-    ;discarding unwanted inputs
-    $movei R1, 'A
-    cmpeq R2, R0, R1
-    $movei R1, 'S
-    cmpeq R1, R0, R1
-    or R2, R2, R1
-    $movei R1, 'L
-    cmpeq R1, R0, R1
-    or R2, R2, R1
-    $movei R1, 'P
-    cmpeq R1, R0, R1
-    or R2, R2, R1	
-    bz R2, end_KEYBOARD	
 
     ;key = keyboar input
     $movei R1, key
