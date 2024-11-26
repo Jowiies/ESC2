@@ -16,7 +16,6 @@ main:
 	$movei R0, interrupts_vector
 	$movei R1, clock_ISR
 	st 0(R0), R1
-
 	$movei R1, keyboard_ISR
 	st 1*2(R0), R1
 
@@ -44,9 +43,17 @@ for:
 	bz R0, for
 
 	$movei R1, move
-	ldb R1, 0(R1)
-    bz R1, show
+	ldb R2, 0(R1)
+    bz R2, show
+    
+    ;move = false
+    xor R2, R2, R2
+    stb 0(R1), R2
 
+	; ticks = 0
+	$movei R1, ticks
+	st 0(R1), R2
+    
     ;Clean char from screen
     $movei R1, ' 
     out Rdat_pant, R1
@@ -54,14 +61,14 @@ for:
     out Rcol_pant, R5
     $movei R1, 0x8000
     out Rcon_pant, R1
-
-    ;if(key == 'L') --row
-    $movei R1, 'L
+    
+    ;if(key == 'P') --row
+    $movei R1, 'P
     cmpeq R1, R0, R1
     sub R4, R4, R1
     
-    ;if(key == 'P') ++row
-    $movei R1, 'P
+    ;if(key == 'L') ++row
+    $movei R1, 'L
     cmpeq R1, R0, R1
     add R4, R4, R1
 
@@ -75,19 +82,7 @@ for:
     cmpeq R1, R0, R1
     sub R5, R5, R1
 
-	; ticks = 0
-	movi R1, 0
-	$movei R0, ticks
-	st 0(R0), R1
-
-show:
-    $movei R1, 'X 
-    out Rdat_pant, R1
-    out Rfil_pant, R4
-    out Rcol_pant, R5
-    $movei R1, 0x8000
-    out Rcon_pant, R1
-
+    ;check if the positions are out of bounds
     xor R0, R0, R0
     xor R1, R1, R1
 
@@ -98,21 +93,29 @@ show:
     or R1, R1, R2
 
     addi R0, R0, 16
-    cmplt R2, R0, R4
+    cmple R2, R0, R4
     or R1, R1, R2
 
     add R0, R0, R0
     add R0, R0, R0
 
-    cmplt R2, R0, R5
+    cmple R2, R0, R5
     or R1, R1, R2
 
-    bz R1, for
+    bnz R1, end_MAIN
+show: 
+    ;show in screen the X character
+    $movei R1, 'X 
+    out Rdat_pant, R1
+    out Rfil_pant, R4
+    out Rcol_pant, R5
+    $movei R1, 0x8000
+    out Rcon_pant, R1
     
-	halt
+    bnz R1, for
 
-
-
+end_MAIN:   
+    halt
 
 keyboard_ISR:
 	;getting keyboard input
@@ -153,16 +156,10 @@ clock_ISR:
 	addi R1, R1, 1
 	st 0(R0), R1
 	
-    ; move = false
-	xor R2, R2, R2
-	$movei R0, move
-	stb 0(R0), R2
-	
 	; if (ticks >= 4) return
-	movi R2, 1*10
+	movi R2, 4
 	$cmpge R2, R1, R2
 	bz R2, end_CLK
-
 
 	; move = true
 	addi R1, R1, 1
