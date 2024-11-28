@@ -15,7 +15,7 @@ main:
 
         addi R2, R2, 1
         out Rcol_pant, R2
-        $movei R1, 0x000 + 'B
+        $movei R1, 'B
         out Rdat_pant, R1
         out Rcon_pant, R3
 

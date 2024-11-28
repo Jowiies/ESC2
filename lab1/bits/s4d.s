@@ -3,7 +3,7 @@
 
 .data
 
-w:      .word 0xFFF9
+w:      .word 0x4444
 
 .balign 2
 

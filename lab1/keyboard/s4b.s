@@ -4,20 +4,36 @@
 .text
 
 main:
-        movi R1, 4          ; fila
-        movi R2, 8          ; columna
-        out Rfil_pant, R1
-        out Rcol_pant, R2
+        movi R0, 4          ; fila
+        out Rfil_pant, R0
+        
+        movi R0, 8          ; columna
+        out Rcol_pant, R0
         
         movi R0, 0
         out Rcon_tec, R0    ;sync keyboard
 
-do:     in R1, Rest_tec
-        bz R1, do
+        movi R2, 'F
 
-        $movei R0, 0x100 + 'A
-        $movei R1 0x8000
+do:     in R0, Rest_tec
+        bz R0, do
+
+        $movei R0, tteclat
+        in R1, Rdat_tec
+        add R1, R0, R1
+        ldb R0, 0(R1)
+
+        xor R3, R0, R2
+        bz R3, end
+
+        $movei R1 0x100
+        add R0, R1, R0
         out Rdat_pant, R0
+        
+        $movei R1 0x8000
         out Rcon_pant, R1
 
-halt
+        bnz R3, do
+
+end:
+        halt
