@@ -3,7 +3,7 @@
 
 .data
 
-w:      .word 0x4444
+w:      .word 0xFFF9
 
 .balign 2
 
@@ -98,7 +98,7 @@ do:
         
         movi R2, 0x1
         and R2, R1, R2
-        $movei R3, 0x100 + '0
+        $movei R3, '0
         add R2, R3, R2
         out Rdat_pant, R2
 

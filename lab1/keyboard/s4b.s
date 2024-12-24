@@ -25,10 +25,8 @@ do:     in R0, Rest_tec
 
         xor R3, R0, R2
         bz R3, end
-
-        $movei R1 0x100
-        add R0, R1, R0
-        out Rdat_pant, R0
+        
+		out Rdat_pant, R0
         
         $movei R1 0x8000
         out Rcon_pant, R1
